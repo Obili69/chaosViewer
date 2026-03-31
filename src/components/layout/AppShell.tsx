@@ -10,14 +10,14 @@ interface AppShellProps {
 
 export async function AppShell({ children }: AppShellProps) {
   const session = await getSession()
-  let currentUser: { role: string } | undefined
+  let currentUser: { role: string; username: string } | undefined
 
   if (session) {
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
-      select: { role: true },
+      select: { role: true, username: true },
     })
-    if (user) currentUser = { role: user.role }
+    if (user) currentUser = { role: user.role, username: user.username }
   }
 
   return (

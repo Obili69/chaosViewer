@@ -17,7 +17,7 @@ interface AreaData {
 
 interface SidebarInnerProps {
   onLinkClick?: () => void
-  currentUser?: { role: string }
+  currentUser?: { role: string; username: string }
 }
 
 function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
@@ -132,6 +132,17 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
       <div className="px-2 pb-4 space-y-1 border-t border-border pt-3">
         {isAdminOrManagement(currentUser?.role ?? '') && navLink('/projekte/neu', 'Neues Projekt', <Plus className="w-4 h-4" />)}
         {currentUser?.role === 'ADMIN' && navLink('/einstellungen/benutzer', 'Benutzer', <Users className="w-4 h-4" />)}
+        {currentUser && (
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl">
+            <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+              <span className="text-xs font-bold text-accent">{currentUser.username[0].toUpperCase()}</span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-text-primary truncate">{currentUser.username}</p>
+              <p className="text-[10px] text-text-muted truncate">{currentUser.role}</p>
+            </div>
+          </div>
+        )}
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-text-secondary hover:text-red-400 hover:bg-red-500/10 transition-colors"
@@ -153,7 +164,7 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
   )
 }
 
-export function Sidebar({ currentUser }: { currentUser?: { role: string } }) {
+export function Sidebar({ currentUser }: { currentUser?: { role: string; username: string } }) {
   return (
     <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-64 bg-surface border-r border-border flex-col z-40">
       <SidebarInner currentUser={currentUser} />
@@ -161,7 +172,7 @@ export function Sidebar({ currentUser }: { currentUser?: { role: string } }) {
   )
 }
 
-export function MobileSidebar({ currentUser }: { currentUser?: { role: string } }) {
+export function MobileSidebar({ currentUser }: { currentUser?: { role: string; username: string } }) {
   const { sidebarOpen, setSidebarOpen } = useNav()
 
   if (!sidebarOpen) return null
