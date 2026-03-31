@@ -21,7 +21,7 @@ interface BudgetItem {
 }
 
 export function BudgetListe({ projectId }: { projectId: string }) {
-  const { items, isLoading, mutate } = useBudget(projectId)
+  const { items, canViewBudget, isLoading, mutate } = useBudget(projectId)
   const [formOpen, setFormOpen] = useState(false)
   const [editItem, setEditItem] = useState<BudgetItem | undefined>()
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -50,11 +50,16 @@ export function BudgetListe({ projectId }: { projectId: string }) {
         <EmptyState
           icon={Wallet}
           title="Kein Budget"
-          description="Füge Ausgaben und Einnahmen hinzu."
+          description="Füge Ausgaben hinzu."
           action={{ label: '+ Eintrag hinzufügen', onClick: () => setFormOpen(true) }}
         />
         <Sheet open={formOpen} onClose={() => setFormOpen(false)} title="Budget-Eintrag">
-          <BudgetFormular projectId={projectId} onSuccess={() => { setFormOpen(false); mutate() }} onCancel={() => setFormOpen(false)} />
+          <BudgetFormular
+            projectId={projectId}
+            restrictToAusgabe={!canViewBudget}
+            onSuccess={() => { setFormOpen(false); mutate() }}
+            onCancel={() => setFormOpen(false)}
+          />
         </Sheet>
       </>
     )
@@ -62,23 +67,25 @@ export function BudgetListe({ projectId }: { projectId: string }) {
 
   return (
     <>
-      {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-3 mb-5">
-        <div className="bg-surface border border-border rounded-xl p-3">
-          <p className="text-xs text-text-muted mb-0.5">Ausgaben</p>
-          <p className="text-base font-bold text-red-400">{formatCurrency(totalAusgaben)}</p>
+      {/* Summary cards — only visible to users with budget view permission */}
+      {canViewBudget && (
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="bg-surface border border-border rounded-xl p-3">
+            <p className="text-xs text-text-muted mb-0.5">Ausgaben</p>
+            <p className="text-base font-bold text-red-400">{formatCurrency(totalAusgaben)}</p>
+          </div>
+          <div className="bg-surface border border-border rounded-xl p-3">
+            <p className="text-xs text-text-muted mb-0.5">Einnahmen</p>
+            <p className="text-base font-bold text-highlight">{formatCurrency(totalEinnahmen)}</p>
+          </div>
+          <div className="bg-surface border border-border rounded-xl p-3">
+            <p className="text-xs text-text-muted mb-0.5">Saldo</p>
+            <p className={`text-base font-bold ${balance >= 0 ? 'text-highlight' : 'text-red-400'}`}>
+              {formatCurrency(balance)}
+            </p>
+          </div>
         </div>
-        <div className="bg-surface border border-border rounded-xl p-3">
-          <p className="text-xs text-text-muted mb-0.5">Einnahmen</p>
-          <p className="text-base font-bold text-highlight">{formatCurrency(totalEinnahmen)}</p>
-        </div>
-        <div className="bg-surface border border-border rounded-xl p-3">
-          <p className="text-xs text-text-muted mb-0.5">Saldo</p>
-          <p className={`text-base font-bold ${balance >= 0 ? 'text-highlight' : 'text-red-400'}`}>
-            {formatCurrency(balance)}
-          </p>
-        </div>
-      </div>
+      )}
 
       <div className="flex justify-end mb-4">
         <Button onClick={() => { setEditItem(undefined); setFormOpen(true) }} size="sm">
@@ -99,14 +106,16 @@ export function BudgetListe({ projectId }: { projectId: string }) {
             <span className={`text-sm font-semibold flex-shrink-0 ${item.type === 'AUSGABE' ? 'text-red-400' : 'text-highlight'}`}>
               {item.type === 'AUSGABE' ? '-' : '+'}{formatCurrency(item.amount)}
             </span>
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => { setEditItem(item); setFormOpen(true) }} className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors">
-                <Pencil className="w-3.5 h-3.5" />
-              </button>
-              <button onClick={() => setDeleteId(item.id)} className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors">
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            {canViewBudget && (
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => { setEditItem(item); setFormOpen(true) }} className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors">
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => setDeleteId(item.id)} className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -115,6 +124,7 @@ export function BudgetListe({ projectId }: { projectId: string }) {
         <BudgetFormular
           projectId={projectId}
           item={editItem}
+          restrictToAusgabe={!canViewBudget}
           onSuccess={() => { setFormOpen(false); setEditItem(undefined); mutate() }}
           onCancel={() => { setFormOpen(false); setEditItem(undefined) }}
         />

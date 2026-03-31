@@ -9,11 +9,22 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const withProjects = searchParams.get('withProjects') === 'true'
 
+  let projectWhere: object = { status: { not: 'ARCHIVIERT' } }
+
+  if (withProjects && session.role === 'USER') {
+    const memberships = await prisma.projectMember.findMany({
+      where: { userId: session.userId, canViewProject: true },
+      select: { projectId: true },
+    })
+    const allowedIds = memberships.map((m) => m.projectId)
+    projectWhere = { status: { not: 'ARCHIVIERT' }, id: { in: allowedIds } }
+  }
+
   const areas = await prisma.area.findMany({
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     include: withProjects ? {
       projects: {
-        where: { status: { not: 'ARCHIVIERT' } },
+        where: projectWhere,
         select: { id: true, name: true, color: true },
         orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       },
@@ -23,7 +34,7 @@ export async function GET(request: Request) {
   let ungrouped: { id: string; name: string; color: string }[] = []
   if (withProjects) {
     ungrouped = await prisma.project.findMany({
-      where: { areaId: null, status: { not: 'ARCHIVIERT' } },
+      where: { areaId: null, ...projectWhere },
       select: { id: true, name: true, color: true },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     })

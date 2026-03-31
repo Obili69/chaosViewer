@@ -30,6 +30,11 @@ export async function POST(request: Request) {
   if (!username?.trim()) return NextResponse.json({ error: 'Benutzername erforderlich' }, { status: 400 })
   if (!password || password.length < 6) return NextResponse.json({ error: 'Passwort muss mindestens 6 Zeichen haben' }, { status: 400 })
 
+  const validRoles = ['USER', 'MANAGEMENT', 'ADMIN']
+  if (role && !validRoles.includes(role)) {
+    return NextResponse.json({ error: 'Ungültige Rolle' }, { status: 400 })
+  }
+
   const existing = await prisma.user.findUnique({ where: { username } })
   if (existing) return NextResponse.json({ error: 'Benutzername bereits vergeben' }, { status: 409 })
 

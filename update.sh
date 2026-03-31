@@ -13,26 +13,15 @@ echo ""
 echo "[INFO] Neuesten Code wird heruntergeladen..."
 git pull origin main
 
-echo "[INFO] Abhängigkeiten werden aktualisiert..."
-npm install --production=false
+echo "[INFO] Docker-Image wird neu gebaut..."
+docker compose build
 
-echo "[INFO] Datenbankschema wird aktualisiert..."
-npx prisma generate
-npx prisma db push
-
-echo "[INFO] Anwendung wird neu gebaut..."
-npm run build
-
-echo "[INFO] Statische Dateien werden kopiert..."
-cp -r .next/static .next/standalone/.next/static
-cp -r public .next/standalone/public
-
-echo "[INFO] Anwendung wird neu gestartet..."
-pm2 restart chaosviewer
+echo "[INFO] Container wird neu gestartet..."
+docker compose up -d
 
 echo ""
 echo "=========================================="
 echo "  Update abgeschlossen!"
 echo "=========================================="
 echo ""
-pm2 status chaosviewer
+docker compose ps

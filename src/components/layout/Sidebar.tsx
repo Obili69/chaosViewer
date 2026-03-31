@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Zap, LayoutDashboard, Plus, ChevronDown, ChevronRight, LogOut, Users } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, isAdminOrManagement } from '@/lib/utils'
 import { useNav } from './NavProvider'
 import { AreaFormular } from '@/components/bereiche/AreaFormular'
 
@@ -130,7 +130,7 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
 
       {/* Bottom actions */}
       <div className="px-2 pb-4 space-y-1 border-t border-border pt-3">
-        {navLink('/projekte/neu', 'Neues Projekt', <Plus className="w-4 h-4" />)}
+        {isAdminOrManagement(currentUser?.role ?? '') && navLink('/projekte/neu', 'Neues Projekt', <Plus className="w-4 h-4" />)}
         {currentUser?.role === 'ADMIN' && navLink('/einstellungen/benutzer', 'Benutzer', <Users className="w-4 h-4" />)}
         <button
           onClick={handleLogout}

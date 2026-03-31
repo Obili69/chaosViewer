@@ -73,5 +73,10 @@ export const STATUS_LABELS: Record<string, string> = {
   FIRMWARE: 'Firmware',
   SONSTIGES: 'Sonstiges',
   ADMIN: 'Administrator',
+  MANAGEMENT: 'Management',
   USER: 'Benutzer',
+}
+
+export function isAdminOrManagement(role: string): boolean {
+  return role === 'ADMIN' || role === 'MANAGEMENT'
 }

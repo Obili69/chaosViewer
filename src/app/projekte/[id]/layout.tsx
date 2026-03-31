@@ -32,9 +32,11 @@ export default async function ProjectLayout({
       <TopBar title={project.name} showBack backHref="/" />
       <BottomNav projectId={params.id} />
 
-      <div className="pt-14 md:pt-0 pb-20 md:pb-0 px-4 md:px-6 max-w-6xl mx-auto">
+      <div className="pt-14 md:pt-0 pb-24 md:pb-0 px-4 md:px-6 max-w-6xl mx-auto">
         <ProjectHeader project={{ ...project, tasksDone }} />
-        <TabBar projectId={params.id} />
+        <div className="hidden md:block">
+          <TabBar projectId={params.id} />
+        </div>
         <div className="py-4">
           {children}
         </div>

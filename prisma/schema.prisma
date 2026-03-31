@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  username     String   @unique
-  email        String?  @unique
-  passwordHash String
-  role         String   @default("USER")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String          @id @default(cuid())
+  username       String          @unique
+  email          String?         @unique
+  passwordHash   String
+  role           String          @default("USER")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  projectMembers ProjectMember[]
 }
 
 model Area {
@@ -46,6 +47,7 @@ model Project {
   links       Link[]
   files       File[]
   versions    Version[]
+  members     ProjectMember[]
 }
 
 model Task {
@@ -118,4 +120,17 @@ model Version {
   projectId   String
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
+}
+
+model ProjectMember {
+  id             String   @id @default(cuid())
+  userId         String
+  projectId      String
+  canViewBudget  Boolean  @default(false)
+  canViewProject Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  @@unique([userId, projectId])
 }

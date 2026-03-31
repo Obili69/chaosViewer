@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, Plus, Trash2, Shield, User } from 'lucide-react'
+import { Users, Plus, Trash2, Shield, User, Briefcase } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
@@ -9,7 +9,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { TopBar } from '@/components/layout/TopBar'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { PageSpinner } from '@/components/ui/Spinner'
-import { formatDate } from '@/lib/utils'
+import { formatDate, STATUS_LABELS } from '@/lib/utils'
 
 interface UserItem {
   id: string
@@ -21,12 +21,20 @@ interface UserItem {
 
 const ROLE_OPTIONS = [
   { value: 'USER', label: 'Benutzer' },
+  { value: 'MANAGEMENT', label: 'Management' },
   { value: 'ADMIN', label: 'Administrator' },
 ]
+
+function RoleIcon({ role }: { role: string }) {
+  if (role === 'ADMIN') return <Shield className="w-4 h-4 text-accent" />
+  if (role === 'MANAGEMENT') return <Briefcase className="w-4 h-4 text-yellow-400" />
+  return <User className="w-4 h-4 text-text-muted" />
+}
 
 export default function BenutzerPage() {
   const [users, setUsers] = useState<UserItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -38,12 +46,19 @@ export default function BenutzerPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => { loadUsers() }, [])
+  useEffect(() => { loadPage() }, [])
 
-  async function loadUsers() {
-    const res = await fetch('/api/admin/users')
-    if (res.ok) {
-      const d = await res.json()
+  async function loadPage() {
+    const [meRes, usersRes] = await Promise.all([
+      fetch('/api/auth/me'),
+      fetch('/api/admin/users'),
+    ])
+    if (meRes.ok) {
+      const me = await meRes.json()
+      setCurrentUserRole(me.user?.role ?? null)
+    }
+    if (usersRes.ok) {
+      const d = await usersRes.json()
       setUsers(d.users ?? [])
     }
     setLoading(false)
@@ -63,7 +78,7 @@ export default function BenutzerPage() {
     if (res.ok) {
       setUsername(''); setPassword(''); setEmail(''); setRole('USER')
       setFormOpen(false)
-      loadUsers()
+      loadPage()
     } else {
       const d = await res.json()
       setError(d.error ?? 'Fehler')
@@ -75,7 +90,7 @@ export default function BenutzerPage() {
     if (!deleteId) return
     setDeleting(true)
     await fetch(`/api/admin/users/${deleteId}`, { method: 'DELETE' })
-    loadUsers()
+    loadPage()
     setDeleteId(null)
     setDeleting(false)
   }
@@ -87,6 +102,22 @@ export default function BenutzerPage() {
       <div className="pt-14 md:pt-0"><PageSpinner /></div>
     </>
   )
+
+  if (currentUserRole !== 'ADMIN') {
+    return (
+      <>
+        <TopBar title="Benutzer" showBack backHref="/" />
+        <BottomNav />
+        <div className="pt-14 md:pt-0 pb-20 md:pb-0 px-4 md:px-6 max-w-2xl mx-auto">
+          <div className="py-16 text-center">
+            <Shield className="w-12 h-12 text-text-muted mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-text-primary mb-2">Keine Berechtigung</h2>
+            <p className="text-sm text-text-muted">Nur Administratoren können Benutzer verwalten.</p>
+          </div>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
@@ -127,12 +158,12 @@ export default function BenutzerPage() {
             {users.map((user) => (
               <div key={user.id} className="flex items-center gap-3 p-4 bg-surface border border-border rounded-xl group">
                 <div className="w-9 h-9 rounded-xl bg-elevated border border-border flex items-center justify-center flex-shrink-0">
-                  {user.role === 'ADMIN' ? <Shield className="w-4 h-4 text-accent" /> : <User className="w-4 h-4 text-text-muted" />}
+                  <RoleIcon role={user.role} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-text-primary">{user.username}</p>
                   <p className="text-xs text-text-muted">
-                    {user.role === 'ADMIN' ? 'Administrator' : 'Benutzer'}
+                    {STATUS_LABELS[user.role] ?? user.role}
                     {user.email && ` • ${user.email}`}
                     {` • Erstellt ${formatDate(user.createdAt)}`}
                   </p>

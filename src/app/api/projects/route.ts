@@ -1,12 +1,25 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { isAdminOrManagement } from '@/lib/utils'
 
 export async function GET() {
   const session = await getSession()
   if (!session) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
+  let projectWhere: object = {}
+
+  if (session.role === 'USER') {
+    const memberships = await prisma.projectMember.findMany({
+      where: { userId: session.userId, canViewProject: true },
+      select: { projectId: true },
+    })
+    const allowedIds = memberships.map((m) => m.projectId)
+    projectWhere = { id: { in: allowedIds } }
+  }
+
   const projects = await prisma.project.findMany({
+    where: projectWhere,
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     include: {
       area: { select: { id: true, name: true, color: true } },
@@ -29,6 +42,10 @@ export async function GET() {
 export async function POST(request: Request) {
   const session = await getSession()
   if (!session) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
+
+  if (!isAdminOrManagement(session.role)) {
+    return NextResponse.json({ error: 'Nicht berechtigt' }, { status: 403 })
+  }
 
   const body = await request.json()
   const { name, description, color, icon, areaId } = body

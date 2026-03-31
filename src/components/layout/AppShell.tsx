@@ -24,7 +24,7 @@ export async function AppShell({ children }: AppShellProps) {
     <>
       <Sidebar currentUser={currentUser} />
       <MobileSidebar currentUser={currentUser} />
-      <main className="md:pl-64 min-h-screen">
+      <main className="md:pl-64 min-h-screen overflow-y-auto">
         {children}
       </main>
     </>

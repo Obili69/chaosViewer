@@ -11,6 +11,7 @@ export function useBudget(projectId: string) {
   )
   return {
     items: data?.items ?? [],
+    canViewBudget: data?.canViewBudget ?? false,
     isLoading,
     isError: !!error,
     mutate,
