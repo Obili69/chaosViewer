@@ -23,7 +23,10 @@ export default async function ProjectLayout({
 
   if (!project) notFound()
 
-  if (session.role === 'USER') {
+  const isOwner = project.ownerId === session.userId
+  const isAdminOrMgt = session.role === 'ADMIN' || session.role === 'MANAGEMENT'
+
+  if (!isOwner && !(isAdminOrMgt && !project.isPersonal)) {
     const member = await prisma.projectMember.findUnique({
       where: { userId_projectId: { userId: session.userId, projectId: params.id } },
     })

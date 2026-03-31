@@ -130,7 +130,7 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
 
       {/* Bottom actions */}
       <div className="px-2 pb-4 space-y-1 border-t border-border pt-3">
-        {isAdminOrManagement(currentUser?.role ?? '') && navLink('/projekte/neu', 'Neues Projekt', <Plus className="w-4 h-4" />)}
+        {navLink('/projekte/neu', 'Neues Projekt', <Plus className="w-4 h-4" />)}
         {currentUser?.role === 'ADMIN' && navLink('/einstellungen/benutzer', 'Benutzer', <Users className="w-4 h-4" />)}
         {currentUser && (
           <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl">

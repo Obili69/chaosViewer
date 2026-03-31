@@ -128,6 +128,9 @@ export default function EinstellungenPage({ params }: { params: { id: string } }
   const [areas, setAreas] = useState<{ id: string; name: string }[]>([])
   const [error, setError] = useState('')
 
+  const [currentUserId, setCurrentUserId] = useState<string>('')
+  const [projectOwnerId, setProjectOwnerId] = useState<string | null>(null)
+
   useEffect(() => {
     Promise.all([
       fetch(`/api/projects/${params.id}`).then((r) => r.json()),
@@ -142,6 +145,8 @@ export default function EinstellungenPage({ params }: { params: { id: string } }
       setAreaId(p.areaId ?? '')
       setAreas(ad.areas ?? [])
       setCurrentUserRole(me.user?.role ?? '')
+      setCurrentUserId(me.user?.id ?? '')
+      setProjectOwnerId(p.ownerId ?? null)
       setLoading(false)
     })
   }, [params.id])
@@ -198,8 +203,8 @@ export default function EinstellungenPage({ params }: { params: { id: string } }
         </Button>
       </form>
 
-      {/* Permissions — visible to ADMIN and MANAGEMENT only */}
-      {isAdminOrManagement(currentUserRole) && (
+      {/* Permissions — visible to ADMIN, MANAGEMENT, and project owner */}
+      {(isAdminOrManagement(currentUserRole) || currentUserId === projectOwnerId) && (
         <BerechtigungenPanel projectId={params.id} />
       )}
 

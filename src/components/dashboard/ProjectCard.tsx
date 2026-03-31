@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { CheckSquare, AlertCircle, Paperclip } from 'lucide-react'
+import { CheckSquare, AlertCircle, Paperclip, Lock } from 'lucide-react'
 import { ProgressRing } from '@/components/project/ProgressRing'
 import { StatusBadge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils'
@@ -13,6 +13,7 @@ interface ProjectCardProps {
     description?: string | null
     color: string
     status: string
+    isPersonal?: boolean
     _count: { tasks: number; issues: number; files: number }
     tasksDone: number
   }
@@ -31,9 +32,16 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="min-w-0">
-          <h3 className="font-semibold text-text-primary truncate text-sm group-hover:text-accent transition-colors">
-            {project.name}
-          </h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-semibold text-text-primary truncate text-sm group-hover:text-accent transition-colors">
+              {project.name}
+            </h3>
+            {project.isPersonal && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-accent bg-accent/10 px-1.5 py-0.5 rounded-md flex-shrink-0">
+                <Lock className="w-2.5 h-2.5" />Privat
+              </span>
+            )}
+          </div>
           {project.description && (
             <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{project.description}</p>
           )}

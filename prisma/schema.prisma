@@ -17,6 +17,7 @@ model User {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   projectMembers ProjectMember[]
+  ownedProjects  Project[]       @relation("OwnedProjects")
 }
 
 model Area {
@@ -38,6 +39,9 @@ model Project {
   icon        String       @default("folder")
   status      String       @default("AKTIV")
   sortOrder   Int          @default(0)
+  isPersonal  Boolean      @default(false)
+  ownerId     String?
+  owner       User?        @relation("OwnedProjects", fields: [ownerId], references: [id], onDelete: SetNull)
   areaId      String?
   area        Area?        @relation(fields: [areaId], references: [id])
   createdAt   DateTime     @default(now())

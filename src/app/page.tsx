@@ -13,14 +13,27 @@ export default async function DashboardPage() {
   const session = await getSession()
   if (!session) redirect('/login')
 
-  let projectWhere: object = { status: { not: 'ARCHIVIERT' } }
-  if (session.role === 'USER') {
-    const memberships = await prisma.projectMember.findMany({
-      where: { userId: session.userId, canViewProject: true },
-      select: { projectId: true },
-    })
-    const allowedIds = memberships.map((m) => m.projectId)
-    projectWhere = { status: { not: 'ARCHIVIERT' }, id: { in: allowedIds } }
+  const memberships = await prisma.projectMember.findMany({
+    where: { userId: session.userId, canViewProject: true },
+    select: { projectId: true },
+  })
+  const memberIds = memberships.map((m) => m.projectId)
+
+  let projectWhere: object
+  if (session.role === 'ADMIN' || session.role === 'MANAGEMENT') {
+    projectWhere = {
+      AND: [
+        { status: { not: 'ARCHIVIERT' } },
+        { OR: [{ isPersonal: false }, { ownerId: session.userId }, { id: { in: memberIds } }] },
+      ],
+    }
+  } else {
+    projectWhere = {
+      AND: [
+        { status: { not: 'ARCHIVIERT' } },
+        { OR: [{ ownerId: session.userId }, { id: { in: memberIds } }] },
+      ],
+    }
   }
 
   const [areas, ungroupedRaw, totalTasks, totalIssues] = await Promise.all([

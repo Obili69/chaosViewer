@@ -9,15 +9,30 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const withProjects = searchParams.get('withProjects') === 'true'
 
-  let projectWhere: object = { status: { not: 'ARCHIVIERT' } }
+  let projectWhere: object = { status: { not: 'ARCHIVIERT' }, isPersonal: false }
 
-  if (withProjects && session.role === 'USER') {
+  if (withProjects) {
     const memberships = await prisma.projectMember.findMany({
       where: { userId: session.userId, canViewProject: true },
       select: { projectId: true },
     })
-    const allowedIds = memberships.map((m) => m.projectId)
-    projectWhere = { status: { not: 'ARCHIVIERT' }, id: { in: allowedIds } }
+    const memberIds = memberships.map((m) => m.projectId)
+
+    if (session.role === 'ADMIN' || session.role === 'MANAGEMENT') {
+      projectWhere = {
+        AND: [
+          { status: { not: 'ARCHIVIERT' } },
+          { OR: [{ isPersonal: false }, { ownerId: session.userId }, { id: { in: memberIds } }] },
+        ],
+      }
+    } else {
+      projectWhere = {
+        AND: [
+          { status: { not: 'ARCHIVIERT' } },
+          { OR: [{ ownerId: session.userId }, { id: { in: memberIds } }] },
+        ],
+      }
+    }
   }
 
   const areas = await prisma.area.findMany({
@@ -25,17 +40,17 @@ export async function GET(request: Request) {
     include: withProjects ? {
       projects: {
         where: projectWhere,
-        select: { id: true, name: true, color: true },
+        select: { id: true, name: true, color: true, isPersonal: true },
         orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       },
     } : undefined,
   })
 
-  let ungrouped: { id: string; name: string; color: string }[] = []
+  let ungrouped: { id: string; name: string; color: string; isPersonal: boolean }[] = []
   if (withProjects) {
     ungrouped = await prisma.project.findMany({
-      where: { areaId: null, ...projectWhere },
-      select: { id: true, name: true, color: true },
+      where: { areaId: null, ...(projectWhere as object) },
+      select: { id: true, name: true, color: true, isPersonal: true },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     })
   }

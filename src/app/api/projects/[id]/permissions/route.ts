@@ -3,15 +3,20 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { isAdminOrManagement } from '@/lib/utils'
 
-async function requireManagement() {
+async function requirePermissionManager(projectId: string) {
   const session = await getSession()
   if (!session) return null
-  if (!isAdminOrManagement(session.role)) return null
-  return session
+  if (isAdminOrManagement(session.role)) return session
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { ownerId: true },
+  })
+  if (project?.ownerId === session.userId) return session
+  return null
 }
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const session = await requireManagement()
+  const session = await requirePermissionManager(params.id)
   if (!session) return NextResponse.json({ error: 'Nicht berechtigt' }, { status: 403 })
 
   const members = await prisma.projectMember.findMany({
@@ -23,7 +28,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 }
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
-  const session = await requireManagement()
+  const session = await requirePermissionManager(params.id)
   if (!session) return NextResponse.json({ error: 'Nicht berechtigt' }, { status: 403 })
 
   const body = await request.json()
@@ -49,7 +54,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-  const session = await requireManagement()
+  const session = await requirePermissionManager(params.id)
   if (!session) return NextResponse.json({ error: 'Nicht berechtigt' }, { status: 403 })
 
   const { searchParams } = new URL(request.url)

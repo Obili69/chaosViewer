@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus } from 'lucide-react'
+import { Plus, Lock } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Select } from '@/components/ui/Select'
@@ -19,13 +19,22 @@ export default function NeuesProjektPage() {
   const [color, setColor] = useState('#06b6d4')
   const [areaId, setAreaId] = useState('')
   const [areas, setAreas] = useState<{ id: string; name: string }[]>([])
+  const [currentRole, setCurrentRole] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [areaFormOpen, setAreaFormOpen] = useState(false)
 
   useEffect(() => {
-    fetch('/api/areas').then((r) => r.json()).then((d) => setAreas(d.areas ?? []))
+    Promise.all([
+      fetch('/api/areas').then((r) => r.json()),
+      fetch('/api/auth/me').then((r) => r.json()),
+    ]).then(([ad, me]) => {
+      setAreas(ad.areas ?? [])
+      setCurrentRole(me.user?.role ?? '')
+    })
   }, [])
+
+  const isUser = currentRole === 'USER'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -36,7 +45,7 @@ export default function NeuesProjektPage() {
     const res = await fetch('/api/projects', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, description, color, areaId: areaId || null }),
+      body: JSON.stringify({ name, description, color, areaId: isUser ? null : (areaId || null) }),
     })
 
     if (res.ok) {
@@ -65,6 +74,13 @@ export default function NeuesProjektPage() {
           </h1>
 
           <form onSubmit={handleSubmit} className="bg-surface border border-border rounded-2xl p-5 space-y-4">
+            {isUser && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-accent/5 border border-accent/20 rounded-xl">
+                <Lock className="w-4 h-4 text-accent flex-shrink-0" />
+                <p className="text-xs text-text-secondary">Privates Projekt — nur für dich und eingeladene Benutzer sichtbar</p>
+              </div>
+            )}
+
             <Input
               label="Projektname *"
               value={name}
@@ -79,26 +95,30 @@ export default function NeuesProjektPage() {
               placeholder="Kurze Projektbeschreibung..."
               rows={3}
             />
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1.5">Bereich</label>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Select
-                    value={areaId}
-                    onChange={(e) => setAreaId(e.target.value)}
-                    options={areaOptions}
-                  />
+
+            {!isUser && (
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1.5">Bereich</label>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Select
+                      value={areaId}
+                      onChange={(e) => setAreaId(e.target.value)}
+                      options={areaOptions}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAreaFormOpen(true)}
+                    className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-border bg-elevated text-text-muted hover:text-accent hover:border-accent/50 transition-colors"
+                    title="Neuer Bereich"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setAreaFormOpen(true)}
-                  className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-border bg-elevated text-text-muted hover:text-accent hover:border-accent/50 transition-colors"
-                  title="Neuer Bereich"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
               </div>
-            </div>
+            )}
+
             <ColorPicker label="Farbe" value={color} onChange={setColor} />
 
             {error && (
