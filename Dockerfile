@@ -33,6 +33,9 @@ COPY --from=builder /app/public ./public
 # Prisma schema for db push at startup
 COPY --from=builder /app/prisma ./prisma
 
+# OpenSSL is required by the Prisma schema engine (used for db push)
+RUN apk add --no-cache openssl
+
 # Install Prisma CLI globally so all transitive deps are resolved correctly
 RUN npm install -g prisma@5.22.0
 
