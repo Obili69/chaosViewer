@@ -6,6 +6,15 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const session = await getSession()
   if (!session) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
+  if (session.role === 'USER') {
+    const member = await prisma.projectMember.findUnique({
+      where: { userId_projectId: { userId: session.userId, projectId: params.id } },
+    })
+    if (!member?.canViewProject) {
+      return NextResponse.json({ error: 'Nicht berechtigt' }, { status: 403 })
+    }
+  }
+
   const project = await prisma.project.findUnique({
     where: { id: params.id },
     include: {

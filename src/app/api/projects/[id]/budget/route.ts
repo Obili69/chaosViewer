@@ -7,11 +7,6 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const session = await getSession()
   if (!session) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
-  const items = await prisma.budgetItem.findMany({
-    where: { projectId: params.id },
-    orderBy: [{ date: 'desc' }],
-  })
-
   let canViewBudget = isAdminOrManagement(session.role)
   if (!canViewBudget) {
     const member = await prisma.projectMember.findUnique({
@@ -19,6 +14,15 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     })
     canViewBudget = member?.canViewBudget ?? false
   }
+
+  if (!canViewBudget) {
+    return NextResponse.json({ items: [], canViewBudget: false })
+  }
+
+  const items = await prisma.budgetItem.findMany({
+    where: { projectId: params.id },
+    orderBy: [{ date: 'desc' }],
+  })
 
   return NextResponse.json({ items, canViewBudget })
 }
