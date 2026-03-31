@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   title: 'ChaosTracker',
   description: 'Selbst gehostete Projektverwaltung',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icons/icon-192.png',
+    apple: '/icons/icon-192.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
