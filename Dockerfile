@@ -3,6 +3,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# OpenSSL needed so Prisma generates the linux-musl-openssl-3.0.x query engine
+RUN apk add --no-cache openssl
+
 # Install dependencies
 COPY package*.json ./
 RUN npm install --production=false
@@ -32,6 +35,10 @@ COPY --from=builder /app/public ./public
 
 # Prisma schema for db push at startup
 COPY --from=builder /app/prisma ./prisma
+
+# Copy the generated Prisma query engine binary (built for linux-musl-openssl-3.0.x)
+COPY --from=builder /app/node_modules/.prisma/client ./node_modules/.prisma/client
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
 # OpenSSL is required by the Prisma schema engine (used for db push)
 RUN apk add --no-cache openssl

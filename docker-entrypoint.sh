@@ -7,11 +7,6 @@ echo "  ChaosTracker"
 echo "=========================================="
 echo ""
 
-# Generate Prisma client for the correct runtime (linux-musl-openssl-3.0.x)
-echo "[INFO] Prisma Client wird generiert..."
-prisma generate
-echo "[OK] Prisma Client bereit"
-
 # Apply schema changes (idempotent — safe to run on every start)
 echo "[INFO] Datenbankschema wird aktualisiert..."
 prisma db push --skip-generate --accept-data-loss
