@@ -7,5 +7,6 @@ uploads
 logs
 .env
 *.md
-*.sh
+install.sh
+update.sh
 ecosystem.config.js
