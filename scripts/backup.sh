@@ -1,6 +1,6 @@
 #!/bin/bash
 # ChaosViewer — SQLite backup to TrueNAS via rsync over SSH
-# Requires: sqlite3, rsync, ssh key auth configured for NAS_USER@NAS_HOST
+# Requires: docker (sqlite3 runs inside container), rsync, ssh key auth configured for NAS_USER@NAS_HOST
 #
 # Setup (run once on server):
 #   ssh-keygen -t ed25519 -f ~/.ssh/chaosviewer_backup -N ""
@@ -21,7 +21,8 @@ if [[ -f "$PROJECT_DIR/.env" ]]; then
   set -a; source "$PROJECT_DIR/.env"; set +a
 fi
 
-DB_PATH="${DB_PATH:-$PROJECT_DIR/data/chaosviewer.db}"
+DB_PATH="${DB_PATH:-/app/data/chaosviewer.db}"   # path inside container
+CONTAINER="${CONTAINER:-chaosviewer}"
 NAS_HOST="${NAS_HOST:-}"
 NAS_USER="${NAS_USER:-backup-chaosviewer}"
 NAS_PATH="${NAS_PATH:-/mnt/DATA/chaosviewer}"
@@ -35,8 +36,8 @@ if [[ -z "$NAS_HOST" ]]; then
   exit 1
 fi
 
-if [[ ! -f "$DB_PATH" ]]; then
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Database not found at $DB_PATH"
+if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Container '${CONTAINER}' is not running"
   exit 1
 fi
 
@@ -53,8 +54,12 @@ TMP_BACKUP="$TMP_DIR/chaosviewer_${TIMESTAMP}.db"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting backup → ${NAS_USER}@${NAS_HOST}:${NAS_PATH}"
 
-# Safe hot backup using SQLite's Online Backup API (works while app is running)
-sqlite3 "$DB_PATH" ".backup $TMP_BACKUP"
+# Safe hot backup using SQLite's Online Backup API via docker exec (works while app is running)
+docker exec "$CONTAINER" sqlite3 "$DB_PATH" ".backup /app/data/chaosviewer_backup_tmp.db"
+# Copy from the host-mounted volume path (no docker cp needed since volume is on host)
+HOST_DATA_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../data"
+cp "${HOST_DATA_DIR}/chaosviewer_backup_tmp.db" "$TMP_BACKUP"
+docker exec "$CONTAINER" rm -f /app/data/chaosviewer_backup_tmp.db
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Snapshot created: $TMP_BACKUP ($(du -h "$TMP_BACKUP" | cut -f1))"
 
 # Sync to NAS
