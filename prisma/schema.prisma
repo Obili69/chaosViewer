@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String?  @unique
+  passwordHash String
+  role         String   @default("USER")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Area {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  color       String    @default("#06b6d4")
+  icon        String    @default("layers")
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  projects    Project[]
+}
+
+model Project {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  color       String       @default("#06b6d4")
+  icon        String       @default("folder")
+  status      String       @default("AKTIV")
+  sortOrder   Int          @default(0)
+  areaId      String?
+  area        Area?        @relation(fields: [areaId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  tasks       Task[]
+  issues      Issue[]
+  budgetItems BudgetItem[]
+  links       Link[]
+  files       File[]
+  versions    Version[]
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String   @default("OFFEN")
+  priority    String   @default("MITTEL")
+  dueDate     DateTime?
+  completedAt DateTime?
+  sortOrder   Int      @default(0)
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Issue {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String   @default("OFFEN")
+  severity    String   @default("MITTEL")
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BudgetItem {
+  id        String   @id @default(cuid())
+  label     String
+  amount    Float
+  type      String   @default("AUSGABE")
+  category  String?
+  date      DateTime @default(now())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Link {
+  id        String   @id @default(cuid())
+  label     String
+  url       String
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model File {
+  id           String   @id @default(cuid())
+  originalName String
+  storedName   String
+  mimeType     String
+  size         Int
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploadedAt   DateTime @default(now())
+}
+
+model Version {
+  id          String    @id @default(cuid())
+  label       String
+  type        String    @default("SOFTWARE")
+  number      String
+  notes       String?
+  releasedAt  DateTime?
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+}
