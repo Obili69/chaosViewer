@@ -9,7 +9,7 @@ echo ""
 
 # Apply schema changes (idempotent — safe to run on every start)
 echo "[INFO] Datenbankschema wird aktualisiert..."
-prisma db push --accept-data-loss
+prisma db push --skip-generate --accept-data-loss
 echo "[OK] Datenbank bereit"
 
 # Create admin user if env vars are set (skipped silently if user already exists)
