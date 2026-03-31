@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, CheckSquare, AlertCircle, Paperclip, MoreHorizontal, Home } from 'lucide-react'
+import { LayoutDashboard, CheckSquare, AlertCircle, Paperclip, MoreHorizontal, Home, Timer } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { Sheet } from '@/components/ui/Sheet'
@@ -58,6 +58,7 @@ export function BottomNav({ projectId }: BottomNavProps) {
           <div className="space-y-2">
             {[
               { href: `${base}/budget`, label: 'Budget' },
+              { href: `${base}/zeit`, label: 'Zeit' },
               { href: `${base}/versionen`, label: 'Versionen' },
               { href: `${base}/links`, label: 'Links' },
               { href: `${base}/einstellungen`, label: 'Einstellungen' },

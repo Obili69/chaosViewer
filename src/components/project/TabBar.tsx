@@ -11,6 +11,7 @@ const TABS = [
   { label: 'Dateien', slug: 'dateien' },
   { label: 'Versionen', slug: 'versionen' },
   { label: 'Links', slug: 'links' },
+  { label: 'Zeit', slug: 'zeit' },
 ]
 
 export function TabBar({ projectId }: { projectId: string }) {

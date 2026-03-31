@@ -23,6 +23,13 @@ export default async function ProjectLayout({
 
   if (!project) notFound()
 
+  if (session.role === 'USER') {
+    const member = await prisma.projectMember.findUnique({
+      where: { userId_projectId: { userId: session.userId, projectId: params.id } },
+    })
+    if (!member?.canViewProject) redirect('/')
+  }
+
   const tasksDone = await prisma.task.count({
     where: { projectId: params.id, status: 'ERLEDIGT' },
   })
