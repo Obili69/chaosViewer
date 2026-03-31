@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
-import { isAdminOrManagement } from '@/lib/utils'
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const session = await getSession()
@@ -14,14 +13,30 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     if (!member?.canViewProject) return NextResponse.json({ error: 'Nicht berechtigt' }, { status: 403 })
   }
 
-  const entries = await prisma.timeEntry.findMany({
-    where: { projectId: params.id },
-    orderBy: { startTime: 'desc' },
-  })
+  const [entries, tasks, issues] = await Promise.all([
+    prisma.timeEntry.findMany({
+      where: { projectId: params.id },
+      orderBy: { startTime: 'desc' },
+      include: {
+        task:  { select: { id: true, title: true } },
+        issue: { select: { id: true, title: true } },
+      },
+    }),
+    prisma.task.findMany({
+      where: { projectId: params.id, status: { not: 'ERLEDIGT' } },
+      select: { id: true, title: true },
+      orderBy: { sortOrder: 'asc' },
+    }),
+    prisma.issue.findMany({
+      where: { projectId: params.id, status: 'OFFEN' },
+      select: { id: true, title: true },
+      orderBy: { createdAt: 'desc' },
+    }),
+  ])
 
   const totalSeconds = entries.reduce((sum, e) => sum + e.duration, 0)
 
-  return NextResponse.json({ entries, totalSeconds })
+  return NextResponse.json({ entries, totalSeconds, tasks, issues })
 }
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
@@ -36,7 +51,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
   }
 
   const body = await request.json()
-  const { description, startTime, endTime, duration } = body
+  const { description, startTime, endTime, duration, taskId, issueId } = body
 
   if (!startTime) return NextResponse.json({ error: 'Startzeit erforderlich' }, { status: 400 })
   if (duration == null || duration <= 0) return NextResponse.json({ error: 'Dauer erforderlich' }, { status: 400 })
@@ -48,6 +63,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
       startTime: new Date(startTime),
       endTime: endTime ? new Date(endTime) : null,
       duration: Math.round(duration),
+      taskId:  taskId  || null,
+      issueId: issueId || null,
     },
   })
 

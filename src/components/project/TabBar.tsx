@@ -5,13 +5,13 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const TABS = [
-  { label: 'Aufgaben', slug: 'aufgaben' },
-  { label: 'Probleme', slug: 'probleme' },
-  { label: 'Budget', slug: 'budget' },
-  { label: 'Dateien', slug: 'dateien' },
+  { label: 'Aufgaben',  slug: 'aufgaben' },
+  { label: 'Probleme',  slug: 'probleme' },
+  { label: 'Zeit',      slug: 'zeit' },
+  { label: 'Links',     slug: 'links' },
+  { label: 'Dateien',   slug: 'dateien' },
   { label: 'Versionen', slug: 'versionen' },
-  { label: 'Links', slug: 'links' },
-  { label: 'Zeit', slug: 'zeit' },
+  { label: 'Budget',    slug: 'budget' },
 ]
 
 export function TabBar({ projectId }: { projectId: string }) {

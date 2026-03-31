@@ -10,6 +10,8 @@ export function useTime(projectId: string) {
   return {
     entries: data?.entries ?? [],
     totalSeconds: data?.totalSeconds ?? 0,
+    tasks:  (data?.tasks  ?? []) as { id: string; title: string }[],
+    issues: (data?.issues ?? []) as { id: string; title: string }[],
     isLoading,
     isError: !!error,
     mutate,

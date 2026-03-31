@@ -7,7 +7,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   if (!session) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
   const body = await request.json()
-  const { description, startTime, endTime, duration } = body
+  const { description, startTime, endTime, duration, taskId, issueId } = body
 
   const entry = await prisma.timeEntry.update({
     where: { id: params.id },
@@ -16,6 +16,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       startTime: startTime ? new Date(startTime) : undefined,
       endTime: endTime ? new Date(endTime) : null,
       duration: duration != null ? Math.round(duration) : undefined,
+      taskId:  taskId  !== undefined ? (taskId  || null) : undefined,
+      issueId: issueId !== undefined ? (issueId || null) : undefined,
     },
   })
 

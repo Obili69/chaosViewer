@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Clock, Pencil, Trash2, Plus } from 'lucide-react'
+import { Clock, Pencil, Trash2, Plus, CheckSquare, AlertCircle } from 'lucide-react'
 import { useTime } from '@/hooks/useTime'
 import { Sheet } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
@@ -18,6 +18,8 @@ interface TimeEntry {
   startTime: string
   endTime?: string | null
   duration: number
+  task?:  { id: string; title: string } | null
+  issue?: { id: string; title: string } | null
 }
 
 function formatDuration(seconds: number): string {
@@ -28,7 +30,7 @@ function formatDuration(seconds: number): string {
 }
 
 export function ZeitListe({ projectId }: { projectId: string }) {
-  const { entries, totalSeconds, isLoading, mutate } = useTime(projectId)
+  const { entries, totalSeconds, tasks, issues, isLoading, mutate } = useTime(projectId)
   const [formOpen, setFormOpen] = useState(false)
   const [editEntry, setEditEntry] = useState<TimeEntry | undefined>()
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -47,7 +49,7 @@ export function ZeitListe({ projectId }: { projectId: string }) {
 
   return (
     <>
-      <Stoppuhr projectId={projectId} onSave={mutate} />
+      <Stoppuhr projectId={projectId} onSave={mutate} tasks={tasks} issues={issues} />
 
       {/* Total summary */}
       {entries.length > 0 && (
@@ -83,7 +85,19 @@ export function ZeitListe({ projectId }: { projectId: string }) {
                 <p className="text-sm font-medium text-text-primary truncate">
                   {entry.description ?? <span className="text-text-muted italic">Kein Titel</span>}
                 </p>
-                <p className="text-xs text-text-muted">{formatDate(entry.startTime)}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-text-muted">{formatDate(entry.startTime)}</span>
+                  {entry.task && (
+                    <span className="inline-flex items-center gap-1 text-xs text-highlight bg-highlight/10 px-1.5 py-0.5 rounded-md">
+                      <CheckSquare className="w-3 h-3" />{entry.task.title}
+                    </span>
+                  )}
+                  {entry.issue && (
+                    <span className="inline-flex items-center gap-1 text-xs text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded-md">
+                      <AlertCircle className="w-3 h-3" />{entry.issue.title}
+                    </span>
+                  )}
+                </div>
               </div>
               <span className="text-sm font-semibold text-accent flex-shrink-0">
                 {formatDuration(entry.duration)}

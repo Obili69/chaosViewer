@@ -53,31 +53,33 @@ model Project {
 }
 
 model Task {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   title       String
   description String?
-  status      String   @default("OFFEN")
-  priority    String   @default("MITTEL")
+  status      String      @default("OFFEN")
+  priority    String      @default("MITTEL")
   dueDate     DateTime?
   completedAt DateTime?
-  sortOrder   Int      @default(0)
+  sortOrder   Int         @default(0)
   projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  timeEntries TimeEntry[]
 }
 
 model Issue {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   title       String
   description String?
-  status      String   @default("OFFEN")
-  severity    String   @default("MITTEL")
+  status      String      @default("OFFEN")
+  severity    String      @default("MITTEL")
   projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
   resolvedAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  timeEntries TimeEntry[]
 }
 
 model BudgetItem {
@@ -132,6 +134,10 @@ model TimeEntry {
   startTime   DateTime
   endTime     DateTime?
   duration    Int       // seconds
+  taskId      String?
+  task        Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  issueId     String?
+  issue       Issue?    @relation(fields: [issueId], references: [id], onDelete: SetNull)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }

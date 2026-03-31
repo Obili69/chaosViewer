@@ -43,7 +43,7 @@ export function BottomNav({ projectId }: BottomNavProps) {
             {tab('/', <Home className="w-5 h-5" />, 'Start')}
             {tab(`${base}/aufgaben`, <CheckSquare className="w-5 h-5" />, 'Aufgaben')}
             {tab(`${base}/probleme`, <AlertCircle className="w-5 h-5" />, 'Probleme')}
-            {tab(`${base}/dateien`, <Paperclip className="w-5 h-5" />, 'Dateien')}
+            {tab(`${base}/zeit`, <Timer className="w-5 h-5" />, 'Zeit')}
             <button
               onClick={() => setMoreOpen(true)}
               className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-text-muted flex-1"
@@ -57,10 +57,10 @@ export function BottomNav({ projectId }: BottomNavProps) {
         <Sheet open={moreOpen} onClose={() => setMoreOpen(false)} title="Mehr">
           <div className="space-y-2">
             {[
-              { href: `${base}/budget`, label: 'Budget' },
-              { href: `${base}/zeit`, label: 'Zeit' },
-              { href: `${base}/versionen`, label: 'Versionen' },
               { href: `${base}/links`, label: 'Links' },
+              { href: `${base}/dateien`, label: 'Dateien' },
+              { href: `${base}/versionen`, label: 'Versionen' },
+              { href: `${base}/budget`, label: 'Budget' },
               { href: `${base}/einstellungen`, label: 'Einstellungen' },
             ].map((item) => (
               <button
