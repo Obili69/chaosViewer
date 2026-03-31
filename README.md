@@ -59,7 +59,7 @@ Das Skript:
 6. Baut die Anwendung
 7. Startet die App mit PM2
 
-Die App ist danach erreichbar unter: **http://10.1.90.13:3039**
+Die App ist danach erreichbar unter: **http://localhost:3039**
 
 ---
 
