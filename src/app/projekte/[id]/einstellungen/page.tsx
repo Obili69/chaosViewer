@@ -30,7 +30,7 @@ interface MemberEntry {
   user: { id: string; username: string; role: string }
 }
 
-function BerechtigungenPanel({ projectId }: { projectId: string }) {
+function BerechtigungenPanel({ projectId, currentUserId }: { projectId: string; currentUserId: string }) {
   const [users, setUsers] = useState<UserEntry[]>([])
   const [members, setMembers] = useState<MemberEntry[]>([])
   const [saving, setSaving] = useState<string | null>(null)
@@ -40,10 +40,11 @@ function BerechtigungenPanel({ projectId }: { projectId: string }) {
       fetch('/api/users').then((r) => r.json()),
       fetch(`/api/projects/${projectId}/permissions`).then((r) => r.json()),
     ]).then(([ud, md]) => {
-      setUsers((ud.users ?? []).filter((u: UserEntry) => u.role === 'USER'))
+      // Show all users except the current user (owner manages others, not themselves)
+      setUsers((ud.users ?? []).filter((u: UserEntry) => u.id !== currentUserId))
       setMembers(md.members ?? [])
     })
-  }, [projectId])
+  }, [projectId, currentUserId])
 
   function getMember(userId: string): MemberEntry | undefined {
     return members.find((m) => m.userId === userId)
@@ -81,7 +82,10 @@ function BerechtigungenPanel({ projectId }: { projectId: string }) {
 
           return (
             <div key={user.id} className="flex flex-col gap-2 p-3 bg-elevated border border-border rounded-xl">
-              <p className="text-sm font-medium text-text-primary">{user.username}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-text-primary">{user.username}</p>
+                <span className="text-[10px] text-text-muted bg-border px-1.5 py-0.5 rounded">{user.role}</span>
+              </div>
               <div className="flex flex-wrap gap-4">
                 <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
                   <input
@@ -205,7 +209,7 @@ export default function EinstellungenPage({ params }: { params: { id: string } }
 
       {/* Permissions — visible to ADMIN, MANAGEMENT, and project owner */}
       {(isAdminOrManagement(currentUserRole) || currentUserId === projectOwnerId) && (
-        <BerechtigungenPanel projectId={params.id} />
+        <BerechtigungenPanel projectId={params.id} currentUserId={currentUserId} />
       )}
 
       {/* Danger zone */}
