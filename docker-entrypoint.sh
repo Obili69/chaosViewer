@@ -9,7 +9,7 @@ echo ""
 
 # Apply schema changes (idempotent — safe to run on every start)
 echo "[INFO] Datenbankschema wird aktualisiert..."
-node /app/node_modules/prisma/build/index.js db push --accept-data-loss
+prisma db push --accept-data-loss
 echo "[OK] Datenbank bereit"
 
 # Create admin user if env vars are set (skipped silently if user already exists)

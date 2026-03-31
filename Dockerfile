@@ -25,15 +25,16 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3039
 ENV HOSTNAME=0.0.0.0
 
-# Next.js standalone output (includes runtime node_modules)
+# Next.js standalone output (includes @prisma/client + runtime node_modules)
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Prisma schema + CLI (for `db push` at startup)
+# Prisma schema for db push at startup
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
+
+# Install Prisma CLI globally so all transitive deps are resolved correctly
+RUN npm install -g prisma@5.22.0
 
 # Admin creation script (bcryptjs + @prisma/client already in standalone node_modules)
 COPY --from=builder /app/scripts ./scripts
