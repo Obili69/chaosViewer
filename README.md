@@ -1,6 +1,7 @@
-# ChaosTracker is in Alpha
+# ChaosTracker
 
 Selbst gehostete Projektverwaltung — dark, modern, simpel, PWA-fähig.
+Getested aber in Testphase
 
 ![ChaosTracker](mainPage.png)
 
