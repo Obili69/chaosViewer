@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description: 'Selbst gehostete Projektverwaltung',
   manifest: '/manifest.json',
   icons: {
-    icon: '/icons/icon-192.png',
+    icon: '/favicon.png',
     apple: '/icons/icon-192.png',
   },
   appleWebApp: {
