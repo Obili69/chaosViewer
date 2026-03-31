@@ -2,7 +2,7 @@
 
 Selbst gehostete Projektverwaltung — dark, modern, PWA-fähig.
 
-![ChaosTracker](public/icons/icon-192.png)
+![ChaosTracker](mainPage.png)
 
 ---
 
