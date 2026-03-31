@@ -1,5 +1,4 @@
-# ChaosTracker
-# Under Development
+# ChaosTracker is in Alpha
 
 Selbst gehostete Projektverwaltung — dark, modern, simpel PWA-fähig.
 
@@ -9,7 +8,7 @@ Selbst gehostete Projektverwaltung — dark, modern, simpel PWA-fähig.
 
 ## Features
 
-- **Bereiche** — Projekte nach Themen gruppieren (z. B. Elektronik, Fahrzeuge)
+- **Bereiche** — Projekte nacdh Themen gruppieren (z. B. Elektronik, Fahrzeuge)
 - **Aufgaben** — To-dos mit Status, Priorität und Fälligkeitsdatum
 - **Probleme** — Bug/Issue-Tracking mit Schweregrad
 - **Budget** — Ausgaben und Einnahmen pro Projekt
