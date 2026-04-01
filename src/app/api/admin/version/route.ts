@@ -14,6 +14,9 @@ function readVersionFile(): string | null {
 
 async function checkGitUpdates(): Promise<{ updateAvailable: boolean; updateCount: number }> {
   try {
+    await execFileAsync('git', ['fetch', 'origin'], { cwd: process.cwd(), timeout: 15000 })
+  } catch { /* fetch failed, continue with existing refs */ }
+  try {
     const { stdout } = await execFileAsync(
       'git',
       ['rev-list', 'HEAD..origin/main', '--count'],
