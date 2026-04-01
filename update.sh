@@ -10,8 +10,17 @@ echo "  ChaosTracker - Update"
 echo "=========================================="
 echo ""
 
-echo "[INFO] Neuesten Code wird heruntergeladen..."
-git pull origin main
+# ── Update-Check ─────────────────────────────
+echo "[INFO] Prüfe auf neue Versionen..."
+git fetch origin 2>/dev/null || echo "[WARN] git fetch fehlgeschlagen (kein Netzwerk?)"
+UPDATE_COUNT=$(git rev-list HEAD..origin/main --count 2>/dev/null || echo 0)
+if [[ "$UPDATE_COUNT" -eq 0 ]]; then
+  echo "[OK] Bereits auf dem neuesten Stand."
+  read -r -p "     Trotzdem neu bauen? [y/N] " confirm
+  [[ "${confirm,,}" == "y" ]] || { echo "Abgebrochen."; exit 0; }
+else
+  echo "[INFO] $UPDATE_COUNT neue Commit(s) verfügbar."
+fi
 
 # ── Backup vor dem Update ────────────────────
 BACKUP_SCRIPT="$SCRIPT_DIR/scripts/backup.sh"
@@ -28,6 +37,19 @@ else
   echo "[WARN] Backup-Script nicht gefunden, übersprungen"
 fi
 
+# ── Code aktualisieren (lokale Modeänderungen ignorieren) ────
+echo "[INFO] Neuesten Code wird heruntergeladen..."
+git config core.fileMode false
+git stash 2>/dev/null || true
+git pull origin main
+git stash pop 2>/dev/null || true
+
+# ── Versionsdatei schreiben (für Update-Anzeige im UI) ───────
+mkdir -p "$SCRIPT_DIR/data"
+git rev-parse --short HEAD > "$SCRIPT_DIR/data/.version" 2>/dev/null || true
+rm -f "$SCRIPT_DIR/data/.update-available"
+
+# ── Docker neu bauen + starten ───────────────
 echo "[INFO] Docker-Image wird neu gebaut..."
 docker compose build
 
@@ -43,7 +65,6 @@ docker compose ps
 
 # ── Cron-Check für Backup ────────────────────
 echo ""
-BACKUP_SCRIPT="$SCRIPT_DIR/scripts/backup.sh"
 if crontab -l 2>/dev/null | grep -q "$BACKUP_SCRIPT"; then
   echo "[OK] Backup-Cronjob ist eingerichtet"
 else

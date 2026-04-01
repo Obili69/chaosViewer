@@ -3,11 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Zap, LayoutDashboard, Plus, ChevronDown, ChevronRight, LogOut, Users, Trash2 } from 'lucide-react'
+import { Zap, LayoutDashboard, Plus, ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
 import { cn, isAdminOrManagement } from '@/lib/utils'
 import { useNav } from './NavProvider'
 import { AreaFormular } from '@/components/bereiche/AreaFormular'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { UserMenuSheet } from './UserMenuSheet'
 
 interface AreaData {
   id: string
@@ -29,6 +30,7 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
   const [areaFormOpen, setAreaFormOpen] = useState(false)
   const [deleteAreaId, setDeleteAreaId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   useEffect(() => {
     fetch('/api/areas?withProjects=true')
@@ -39,11 +41,6 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
       })
       .catch(() => {})
   }, [pathname])
-
-  async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' })
-    window.location.href = '/login'
-  }
 
   const toggle = (id: string) => setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }))
 
@@ -153,25 +150,20 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
       {/* Bottom actions */}
       <div className="px-2 pb-4 space-y-1 border-t border-border pt-3">
         {navLink('/projekte/neu', 'Neues Projekt', <Plus className="w-4 h-4" />)}
-        {currentUser?.role === 'ADMIN' && navLink('/einstellungen/benutzer', 'Benutzer', <Users className="w-4 h-4" />)}
         {currentUser && (
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl">
+          <button
+            onClick={() => setUserMenuOpen(true)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-elevated transition-colors"
+          >
             <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
               <span className="text-xs font-bold text-accent">{currentUser.username[0].toUpperCase()}</span>
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 text-left">
               <p className="text-xs font-medium text-text-primary truncate">{currentUser.username}</p>
               <p className="text-[10px] text-text-muted truncate">{currentUser.role}</p>
             </div>
-          </div>
+          </button>
         )}
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-text-secondary hover:text-red-400 hover:bg-red-500/10 transition-colors"
-        >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
-          <span>Abmelden</span>
-        </button>
       </div>
 
       <ConfirmDialog
@@ -182,6 +174,13 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
         title="Bereich löschen"
         message={`Bereich "${areas.find(a => a.id === deleteAreaId)?.name}" löschen? Projekte werden nicht gelöscht, nur aus dem Bereich entfernt.`}
       />
+      {currentUser && (
+        <UserMenuSheet
+          open={userMenuOpen}
+          onClose={() => setUserMenuOpen(false)}
+          currentUser={currentUser}
+        />
+      )}
       <AreaFormular
         open={areaFormOpen}
         onClose={() => setAreaFormOpen(false)}

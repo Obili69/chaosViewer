@@ -4,9 +4,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, CheckSquare, AlertCircle, Paperclip, MoreHorizontal, Home, Timer } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sheet } from '@/components/ui/Sheet'
 import { useRouter } from 'next/navigation'
+import { UserMenuSheet } from './UserMenuSheet'
 
 interface BottomNavProps {
   projectId?: string
@@ -16,6 +17,15 @@ export function BottomNav({ projectId }: BottomNavProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [moreOpen, setMoreOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [currentUser, setCurrentUser] = useState<{ role: string; username: string } | null>(null)
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => d?.user && setCurrentUser({ role: d.user.role, username: d.user.username }))
+      .catch(() => {})
+  }, [])
 
   const tab = (href: string, icon: React.ReactNode, label: string) => {
     const active = pathname === href || (pathname.startsWith(href) && href !== '/')
@@ -79,11 +89,31 @@ export function BottomNav({ projectId }: BottomNavProps) {
 
   // Dashboard / global nav
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden glass border-t border-border safe-bottom">
-      <div className="flex items-center px-1 h-14">
-        {tab('/', <LayoutDashboard className="w-5 h-5" />, 'Übersicht')}
-        {tab('/projekte/neu', <span className="w-5 h-5 flex items-center justify-center text-lg font-bold">+</span>, 'Neu')}
-      </div>
-    </nav>
+    <>
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden glass border-t border-border safe-bottom">
+        <div className="flex items-center px-1 h-14">
+          {tab('/', <LayoutDashboard className="w-5 h-5" />, 'Übersicht')}
+          {tab('/projekte/neu', <span className="w-5 h-5 flex items-center justify-center text-lg font-bold">+</span>, 'Neu')}
+          {currentUser && (
+            <button
+              onClick={() => setUserMenuOpen(true)}
+              className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-text-muted flex-1"
+            >
+              <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center">
+                <span className="text-[10px] font-bold text-accent">{currentUser.username[0].toUpperCase()}</span>
+              </div>
+              <span className="text-[10px] font-medium">Konto</span>
+            </button>
+          )}
+        </div>
+      </nav>
+      {currentUser && (
+        <UserMenuSheet
+          open={userMenuOpen}
+          onClose={() => setUserMenuOpen(false)}
+          currentUser={currentUser}
+        />
+      )}
+    </>
   )
 }
