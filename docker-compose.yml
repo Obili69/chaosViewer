@@ -17,6 +17,13 @@ services:
       # Remove them afterwards — the account persists in the database.
       ADMIN_USERNAME: "${ADMIN_USERNAME:-}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
+      # Backup to NAS (see scripts/backup.sh)
+      NAS_HOST: "${NAS_HOST:-}"
+      NAS_USER: "${NAS_USER:-backup-chaosviewer}"
+      NAS_PATH: "${NAS_PATH:-/mnt/DATA/chaosviewer}"
+      SSH_KEY: "/root/.ssh/chaosviewer_backup"
+      DB_PATH: "/app/data/chaosviewer.db"
     volumes:
       - ./data:/app/data
       - ./uploads:/app/uploads
+      - ${SSH_KEY_HOST:-/root/.ssh/chaosviewer_backup}:/root/.ssh/chaosviewer_backup:ro

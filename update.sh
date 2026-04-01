@@ -25,3 +25,15 @@ echo "  Update abgeschlossen!"
 echo "=========================================="
 echo ""
 docker compose ps
+
+# ── Cron-Check für Backup ────────────────────
+echo ""
+BACKUP_SCRIPT="$SCRIPT_DIR/scripts/backup.sh"
+if crontab -l 2>/dev/null | grep -q "$BACKUP_SCRIPT"; then
+  echo "[OK] Backup-Cronjob ist eingerichtet"
+else
+  echo "[WARN] Kein Backup-Cronjob gefunden!"
+  echo "       Einrichten mit: crontab -e"
+  echo "       Zeile hinzufügen:"
+  echo "       0 3 * * * $BACKUP_SCRIPT >> /var/log/chaosviewer-backup.log 2>&1"
+fi
