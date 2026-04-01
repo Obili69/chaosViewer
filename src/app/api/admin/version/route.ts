@@ -2,48 +2,50 @@ import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import fs from 'fs'
 import path from 'path'
+import { execFile } from 'child_process'
+import { promisify } from 'util'
 
-const WEBHOOK_URL = 'http://host.docker.internal:3040'
+const execFileAsync = promisify(execFile)
 
-function readVersionFiles() {
+function readVersionFile(): string | null {
   const versionFile = path.join(process.cwd(), 'data', '.version')
-  const updateFile = path.join(process.cwd(), 'data', '.update-available')
-  const version = fs.existsSync(versionFile) ? fs.readFileSync(versionFile, 'utf8').trim() : null
-  const updateCount = fs.existsSync(updateFile) && fs.statSync(updateFile).isFile()
-    ? parseInt(fs.readFileSync(updateFile, 'utf8').trim(), 10) || 1
-    : 0
-  return { version, updateAvailable: updateCount > 0, updateCount }
+  return fs.existsSync(versionFile) ? fs.readFileSync(versionFile, 'utf8').trim() : null
 }
 
+async function checkGitUpdates(): Promise<{ updateAvailable: boolean; updateCount: number }> {
+  try {
+    const { stdout } = await execFileAsync(
+      'git',
+      ['rev-list', 'HEAD..origin/main', '--count'],
+      { cwd: process.cwd(), timeout: 5000 }
+    )
+    const count = parseInt(stdout.trim(), 10) || 0
+    return { updateAvailable: count > 0, updateCount: count }
+  } catch {
+    return { updateAvailable: false, updateCount: 0 }
+  }
+}
+
+// GET — fast, reads cached file (used on sheet open)
 export async function GET() {
   const session = await getSession()
   if (!session) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
-  return NextResponse.json(readVersionFiles())
+
+  const version = readVersionFile()
+  const updateFile = path.join(process.cwd(), 'data', '.update-available')
+  const updateCount =
+    fs.existsSync(updateFile) && fs.statSync(updateFile).isFile()
+      ? parseInt(fs.readFileSync(updateFile, 'utf8').trim(), 10) || 1
+      : 0
+  return NextResponse.json({ version, updateAvailable: updateCount > 0, updateCount })
 }
 
-// POST — triggers real git fetch via webhook, returns result directly from webhook response
+// POST — live git check via mounted .git directory (used by "Nach Updates suchen" button)
 export async function POST() {
   const session = await getSession()
   if (!session) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
-  const secret = process.env.WEBHOOK_SECRET
-  if (!secret) return NextResponse.json(readVersionFiles())
-
-  const { version } = readVersionFiles()
-
-  try {
-    const res = await fetch(`${WEBHOOK_URL}/check`, {
-      method: 'POST',
-      headers: { 'X-Webhook-Secret': secret },
-      signal: AbortSignal.timeout(20000),
-    })
-    if (res.ok) {
-      const data = await res.json()
-      return NextResponse.json({ version, ...data })
-    }
-  } catch {
-    // Webhook unreachable — fall back to cached files
-  }
-
-  return NextResponse.json(readVersionFiles())
+  const version = readVersionFile()
+  const { updateAvailable, updateCount } = await checkGitUpdates()
+  return NextResponse.json({ version, updateAvailable, updateCount })
 }

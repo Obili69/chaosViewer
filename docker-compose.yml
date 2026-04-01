@@ -30,3 +30,4 @@ services:
       - ./data:/app/data
       - ./uploads:/app/uploads
       - ${SSH_KEY:-/root/.ssh/chaosviewer_backup}:/root/.ssh/chaosviewer_backup:ro
+      - ./.git:/app/.git:ro

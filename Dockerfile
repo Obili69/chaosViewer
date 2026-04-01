@@ -42,7 +42,7 @@ COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/clie
 
 # OpenSSL is required by the Prisma schema engine (used for db push)
 # bash + sqlite + rsync + openssh-client are required for the backup script
-RUN apk add --no-cache openssl bash sqlite rsync openssh-client
+RUN apk add --no-cache openssl bash sqlite rsync openssh-client git
 
 # Install Prisma CLI globally so all transitive deps are resolved correctly
 RUN npm install -g prisma@5.22.0
