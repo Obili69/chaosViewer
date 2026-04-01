@@ -12,7 +12,7 @@ export async function POST() {
   const scriptPath = path.join(process.cwd(), 'scripts', 'backup.sh')
 
   return new Promise<NextResponse>((resolve) => {
-    execFile('bash', [scriptPath], { timeout: 60000 }, (err, stdout, stderr) => {
+    execFile('/bin/bash', [scriptPath], { timeout: 60000 }, (err, stdout, stderr) => {
       if (err) {
         const output = (stderr || stdout || err.message).trim()
         resolve(NextResponse.json({ error: output }, { status: 500 }))
