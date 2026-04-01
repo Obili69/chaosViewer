@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
@@ -29,6 +29,15 @@ export function AreaFormular({ open, onClose, onSuccess, editArea }: Props) {
   const [error, setError] = useState('')
 
   const isEdit = !!editArea
+
+  useEffect(() => {
+    if (open) {
+      setName(editArea?.name ?? '')
+      setDescription(editArea?.description ?? '')
+      setColor(editArea?.color ?? '#06b6d4')
+      setError('')
+    }
+  }, [open, editArea])
 
   function reset() {
     setName(editArea?.name ?? '')
