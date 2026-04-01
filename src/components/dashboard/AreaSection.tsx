@@ -48,7 +48,7 @@ export function AreaSection({ areaId, name, color, projects, canManage }: AreaSe
         {canManage && (
           <button
             onClick={() => setConfirmOpen(true)}
-            className="w-6 h-6 flex items-center justify-center rounded-lg text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-text-muted hover:text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
