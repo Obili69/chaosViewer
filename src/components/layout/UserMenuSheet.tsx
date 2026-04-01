@@ -1,10 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Sheet } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
-import { Database, Users, LogOut, RefreshCw, AlertTriangle } from 'lucide-react'
+import { Database, Users, LogOut, RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 
 interface Props {
@@ -20,22 +19,26 @@ interface VersionInfo {
 }
 
 export function UserMenuSheet({ open, onClose, currentUser }: Props) {
-  const router = useRouter()
   const isAdmin = currentUser.role === 'ADMIN'
   const canManage = currentUser.role === 'ADMIN' || currentUser.role === 'MANAGEMENT'
 
   const [backupRunning, setBackupRunning] = useState(false)
   const [backupResult, setBackupResult] = useState<{ ok?: boolean; error?: string } | null>(null)
   const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null)
+  const [checking, setChecking] = useState(false)
 
   useEffect(() => {
-    if (open) {
-      fetch('/api/admin/version')
-        .then((r) => r.json())
-        .then(setVersionInfo)
-        .catch(() => {})
-    }
+    if (open) fetchVersion()
   }, [open])
+
+  async function fetchVersion() {
+    setChecking(true)
+    fetch('/api/admin/version')
+      .then((r) => r.json())
+      .then(setVersionInfo)
+      .catch(() => {})
+      .finally(() => setChecking(false))
+  }
 
   async function handleBackup() {
     setBackupRunning(true)
@@ -57,11 +60,29 @@ export function UserMenuSheet({ open, onClose, currentUser }: Props) {
         {/* Role badge */}
         <p className="text-xs text-text-muted -mt-2 mb-4">{currentUser.role}</p>
 
-        {/* Update available banner */}
-        {versionInfo?.updateAvailable && (
-          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-            <span>{versionInfo.updateCount} neue Version{versionInfo.updateCount !== 1 ? 'en' : ''} verfügbar</span>
+        {/* Update status */}
+        {canManage && (
+          <div className="space-y-2">
+            {versionInfo?.updateAvailable ? (
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <span className="flex-1">{versionInfo.updateCount} neue Commit{versionInfo.updateCount !== 1 ? 's' : ''} verfügbar</span>
+              </div>
+            ) : versionInfo && !versionInfo.updateAvailable ? (
+              <div className="flex items-center gap-2 px-3 py-2 text-emerald-400 text-sm">
+                <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                <span>Aktuell</span>
+              </div>
+            ) : null}
+            <Button
+              onClick={fetchVersion}
+              disabled={checking}
+              variant="secondary"
+              className="w-full justify-start gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${checking ? 'animate-spin' : ''}`} />
+              {checking ? 'Prüfe...' : 'Auf Updates prüfen'}
+            </Button>
           </div>
         )}
 

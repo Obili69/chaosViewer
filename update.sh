@@ -45,9 +45,10 @@ git pull origin main
 git stash pop 2>/dev/null || true
 
 # ── Versionsdatei schreiben (für Update-Anzeige im UI) ───────
-mkdir -p "$SCRIPT_DIR/data"
 git rev-parse --short HEAD > "$SCRIPT_DIR/data/.version" 2>/dev/null || true
-rm -f "$SCRIPT_DIR/data/.update-available"
+rm -f "$SCRIPT_DIR/.update-available"
+# Pre-create so docker-compose bind mount doesn't create a directory
+touch "$SCRIPT_DIR/.update-available" 2>/dev/null || true
 
 # ── Docker neu bauen + starten ───────────────
 echo "[INFO] Docker-Image wird neu gebaut..."
