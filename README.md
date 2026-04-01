@@ -1,6 +1,6 @@
 # ChaosTracker
 
-Selbst gehostete Projektverwaltung — dark, modern, simpel, PWA-fähig.
+Selbst gehostete Projektverwaltung — dark, modern, simpel, PWA-fähig, auto update.
 ![ChaosTracker](mainPage.png)
 
 ---
