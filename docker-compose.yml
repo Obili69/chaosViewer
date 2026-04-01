@@ -26,4 +26,4 @@ services:
     volumes:
       - ./data:/app/data
       - ./uploads:/app/uploads
-      - ${SSH_KEY_HOST:-/root/.ssh/chaosviewer_backup}:/root/.ssh/chaosviewer_backup:ro
+      - ${SSH_KEY:-/root/.ssh/chaosviewer_backup}:/root/.ssh/chaosviewer_backup:ro
