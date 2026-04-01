@@ -1,0 +1,27 @@
+[Unit]
+Description=ChaosViewer Webhook Server
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+# Change User and WorkingDirectory to match your setup
+User=obi
+WorkingDirectory=/home/obi/gitProjecs/chaosViewer
+ExecStart=/usr/bin/python3 /home/obi/gitProjecs/chaosViewer/scripts/webhook-server.py
+Restart=on-failure
+RestartSec=5
+
+# Only allow connections from localhost and docker bridge ranges
+IPAddressDeny=any
+IPAddressAllow=127.0.0.1/32
+IPAddressAllow=10.0.0.0/8
+IPAddressAllow=172.16.0.0/12
+IPAddressAllow=192.168.0.0/16
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=chaosviewer-webhook
+
+[Install]
+WantedBy=multi-user.target

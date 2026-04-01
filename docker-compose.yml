@@ -8,11 +8,14 @@ services:
     restart: unless-stopped
     ports:
       - "3039:3039"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       DATABASE_URL: "file:/app/data/chaosviewer.db"
       UPLOAD_DIR: "/app/uploads"
       MAX_FILE_SIZE: "52428800"
       JWT_SECRET: "${JWT_SECRET}"
+      WEBHOOK_SECRET: "${WEBHOOK_SECRET}"
       # Set these only on first start to create the initial admin account.
       # Remove them afterwards — the account persists in the database.
       ADMIN_USERNAME: "${ADMIN_USERNAME:-}"

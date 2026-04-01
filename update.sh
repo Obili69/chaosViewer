@@ -16,8 +16,12 @@ git fetch origin 2>/dev/null || echo "[WARN] git fetch fehlgeschlagen (kein Netz
 UPDATE_COUNT=$(git rev-list HEAD..origin/main --count 2>/dev/null || echo 0)
 if [[ "$UPDATE_COUNT" -eq 0 ]]; then
   echo "[OK] Bereits auf dem neuesten Stand."
-  read -r -p "     Trotzdem neu bauen? [y/N] " confirm
-  [[ "${confirm,,}" == "y" ]] || { echo "Abgebrochen."; exit 0; }
+  if [[ "${NONINTERACTIVE:-0}" == "1" ]]; then
+    echo "[INFO] Nicht-interaktiver Modus: Build wird trotzdem durchgeführt."
+  else
+    read -r -p "     Trotzdem neu bauen? [y/N] " confirm
+    [[ "${confirm,,}" == "y" ]] || { echo "Abgebrochen."; exit 0; }
+  fi
 else
   echo "[INFO] $UPDATE_COUNT neue Commit(s) verfügbar."
 fi
@@ -30,8 +34,12 @@ if [[ -f "$BACKUP_SCRIPT" ]]; then
     echo "[OK] Backup erfolgreich"
   else
     echo "[WARN] Backup fehlgeschlagen!"
-    read -r -p "         Trotzdem fortfahren? [y/N] " confirm
-    [[ "${confirm,,}" == "y" ]] || { echo "Update abgebrochen."; exit 1; }
+    if [[ "${NONINTERACTIVE:-0}" == "1" ]]; then
+      echo "[WARN] Nicht-interaktiver Modus: Fortfahren trotz Backup-Fehler."
+    else
+      read -r -p "         Trotzdem fortfahren? [y/N] " confirm
+      [[ "${confirm,,}" == "y" ]] || { echo "Update abgebrochen."; exit 1; }
+    fi
   fi
 else
   echo "[WARN] Backup-Script nicht gefunden, übersprungen"
