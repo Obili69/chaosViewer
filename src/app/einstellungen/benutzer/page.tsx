@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, Plus, Trash2, Shield, User, Briefcase } from 'lucide-react'
+import { Users, Plus, Trash2, Shield, User, Briefcase, Database } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
@@ -45,6 +45,17 @@ export default function BenutzerPage() {
   const [role, setRole] = useState('USER')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [backupRunning, setBackupRunning] = useState(false)
+  const [backupResult, setBackupResult] = useState<{ ok?: boolean; error?: string } | null>(null)
+
+  async function handleBackup() {
+    setBackupRunning(true)
+    setBackupResult(null)
+    const res = await fetch('/api/admin/backup', { method: 'POST' })
+    const data = await res.json()
+    setBackupResult(res.ok ? { ok: true } : { error: data.error })
+    setBackupRunning(false)
+  }
 
   useEffect(() => { loadPage() }, [])
 
@@ -176,6 +187,21 @@ export default function BenutzerPage() {
                 </button>
               </div>
             ))}
+          </div>
+
+          {/* Backup */}
+          <div className="mt-8 pt-6 border-t border-border">
+            <h2 className="text-base font-semibold text-text-primary mb-3 flex items-center gap-2">
+              <Database className="w-4 h-4 text-text-muted" />
+              Datenbank-Backup
+            </h2>
+            <div className="flex items-center gap-3">
+              <Button onClick={handleBackup} disabled={backupRunning} variant="secondary" size="sm">
+                {backupRunning ? 'Backup läuft...' : 'Backup jetzt starten'}
+              </Button>
+              {backupResult?.ok && <span className="text-sm text-emerald-400">Backup erfolgreich</span>}
+              {backupResult?.error && <span className="text-sm text-red-400 truncate max-w-xs">{backupResult.error}</span>}
+            </div>
           </div>
         </div>
       </div>

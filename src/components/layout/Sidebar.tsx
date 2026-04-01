@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Zap, LayoutDashboard, Plus, ChevronDown, ChevronRight, LogOut, Users } from 'lucide-react'
+import { Zap, LayoutDashboard, Plus, ChevronDown, ChevronRight, LogOut, Users, Trash2 } from 'lucide-react'
 import { cn, isAdminOrManagement } from '@/lib/utils'
 import { useNav } from './NavProvider'
 import { AreaFormular } from '@/components/bereiche/AreaFormular'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface AreaData {
   id: string
@@ -26,6 +27,8 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
   const [ungrouped, setUngrouped] = useState<{ id: string; name: string; color: string }[]>([])
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const [areaFormOpen, setAreaFormOpen] = useState(false)
+  const [deleteAreaId, setDeleteAreaId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     fetch('/api/areas?withProjects=true')
@@ -43,6 +46,15 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
   }
 
   const toggle = (id: string) => setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }))
+
+  async function handleDeleteArea() {
+    if (!deleteAreaId) return
+    setDeleting(true)
+    await fetch(`/api/areas/${deleteAreaId}`, { method: 'DELETE' })
+    setAreas((prev) => prev.filter((a) => a.id !== deleteAreaId))
+    setDeleteAreaId(null)
+    setDeleting(false)
+  }
 
   const navLink = (href: string, label: string, icon: React.ReactNode, color?: string) => {
     const active = pathname === href || (href !== '/' && pathname.startsWith(href))
@@ -96,15 +108,25 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
 
         {/* Areas */}
         {areas.map((area) => (
-          <div key={area.id}>
-            <button
-              onClick={() => toggle(area.id)}
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-text-muted hover:text-text-secondary uppercase tracking-wider transition-colors"
-            >
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: area.color }} />
-              <span className="flex-1 text-left truncate">{area.name}</span>
-              {collapsed[area.id] ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
+          <div key={area.id} className="group/area">
+            <div className="flex items-center">
+              <button
+                onClick={() => toggle(area.id)}
+                className="flex-1 flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-text-muted hover:text-text-secondary uppercase tracking-wider transition-colors min-w-0"
+              >
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: area.color }} />
+                <span className="flex-1 text-left truncate">{area.name}</span>
+                {collapsed[area.id] ? <ChevronRight className="w-3 h-3 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 flex-shrink-0" />}
+              </button>
+              {isAdminOrManagement(currentUser?.role ?? '') && (
+                <button
+                  onClick={() => setDeleteAreaId(area.id)}
+                  className="w-6 h-6 mr-1 flex items-center justify-center rounded text-text-muted hover:text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-colors opacity-0 group-hover/area:opacity-100"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
+            </div>
             {!collapsed[area.id] && area.projects.map((p) => (
               <div key={p.id} className="ml-2">
                 {navLink(`/projekte/${p.id}`, p.name, null, p.color)}
@@ -152,6 +174,14 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
         </button>
       </div>
 
+      <ConfirmDialog
+        open={!!deleteAreaId}
+        onClose={() => setDeleteAreaId(null)}
+        onConfirm={handleDeleteArea}
+        loading={deleting}
+        title="Bereich löschen"
+        message={`Bereich "${areas.find(a => a.id === deleteAreaId)?.name}" löschen? Projekte werden nicht gelöscht, nur aus dem Bereich entfernt.`}
+      />
       <AreaFormular
         open={areaFormOpen}
         onClose={() => setAreaFormOpen(false)}

@@ -102,16 +102,14 @@ export default async function DashboardPage() {
 
           {/* Areas */}
           {enrichedAreas.map((area) => (
-            area.projects.length > 0 && (
-              <AreaSection
-                key={area.id}
-                areaId={area.id}
-                name={area.name}
-                color={area.color}
-                projects={area.projects}
-                canManage={session.role === 'ADMIN' || session.role === 'MANAGEMENT'}
-              />
-            )
+            <AreaSection
+              key={area.id}
+              areaId={area.id}
+              name={area.name}
+              color={area.color}
+              projects={area.projects}
+              canManage={session.role === 'ADMIN' || session.role === 'MANAGEMENT'}
+            />
           ))}
 
           {/* Ungrouped */}
