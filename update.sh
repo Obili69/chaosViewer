@@ -13,6 +13,21 @@ echo ""
 echo "[INFO] Neuesten Code wird heruntergeladen..."
 git pull origin main
 
+# ── Backup vor dem Update ────────────────────
+BACKUP_SCRIPT="$SCRIPT_DIR/scripts/backup.sh"
+if [[ -f "$BACKUP_SCRIPT" ]]; then
+  echo "[INFO] Backup wird erstellt..."
+  if bash "$BACKUP_SCRIPT"; then
+    echo "[OK] Backup erfolgreich"
+  else
+    echo "[WARN] Backup fehlgeschlagen!"
+    read -r -p "         Trotzdem fortfahren? [y/N] " confirm
+    [[ "${confirm,,}" == "y" ]] || { echo "Update abgebrochen."; exit 1; }
+  fi
+else
+  echo "[WARN] Backup-Script nicht gefunden, übersprungen"
+fi
+
 echo "[INFO] Docker-Image wird neu gebaut..."
 docker compose build
 
