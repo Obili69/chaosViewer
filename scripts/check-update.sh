@@ -13,7 +13,7 @@ git fetch origin 2>/dev/null || exit 0
 COUNT=$(git rev-list HEAD..origin/main --count 2>/dev/null || echo 0)
 
 if [[ "$COUNT" -gt 0 ]]; then
-  echo "$COUNT" > "$PROJECT_DIR/.update-available"
+  echo "$COUNT" > "$PROJECT_DIR/data/.update-available"
 else
-  rm -f "$PROJECT_DIR/.update-available"
+  rm -f "$PROJECT_DIR/data/.update-available"
 fi

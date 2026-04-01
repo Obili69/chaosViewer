@@ -8,7 +8,7 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
   const versionFile = path.join(process.cwd(), 'data', '.version')
-  const updateFile = path.join(process.cwd(), '.update-available')
+  const updateFile = path.join(process.cwd(), 'data', '.update-available')
 
   const version = fs.existsSync(versionFile)
     ? fs.readFileSync(versionFile, 'utf8').trim()
