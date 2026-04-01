@@ -19,8 +19,8 @@ module.exports = {
         },
         text: {
           primary: '#f0f9ff',
-          secondary: '#94a3b8',
-          muted: '#475569',
+          secondary: '#b0bec5',
+          muted: '#64748b',
         },
         status: {
           open: '#94a3b8',
