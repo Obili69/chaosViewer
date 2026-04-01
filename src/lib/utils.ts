@@ -22,10 +22,19 @@ export function formatDate(date: string | Date | null | undefined): string {
   })
 }
 
+const CURRENCY = 'CHF'
+const CURRENCY_LOCALE = 'de-CH'
+
+export const CURRENCY_LABEL = new Intl.NumberFormat(CURRENCY_LOCALE, {
+  style: 'currency',
+  currency: CURRENCY,
+  maximumFractionDigits: 0,
+}).formatToParts(0).find(p => p.type === 'currency')?.value ?? CURRENCY
+
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('de-CH', {
+  return new Intl.NumberFormat(CURRENCY_LOCALE, {
     style: 'currency',
-    currency: 'CHF',
+    currency: CURRENCY,
   }).format(amount)
 }
 
