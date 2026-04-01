@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Zap, LayoutDashboard, Plus, ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
+import { Zap, LayoutDashboard, Plus, ChevronDown, ChevronRight, Trash2, Pencil } from 'lucide-react'
 import { cn, isAdminOrManagement } from '@/lib/utils'
 import { useNav } from './NavProvider'
 import { AreaFormular } from '@/components/bereiche/AreaFormular'
@@ -28,6 +28,7 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
   const [ungrouped, setUngrouped] = useState<{ id: string; name: string; color: string }[]>([])
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const [areaFormOpen, setAreaFormOpen] = useState(false)
+  const [editArea, setEditArea] = useState<AreaData | null>(null)
   const [deleteAreaId, setDeleteAreaId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -116,12 +117,20 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
                 {collapsed[area.id] ? <ChevronRight className="w-3 h-3 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 flex-shrink-0" />}
               </button>
               {isAdminOrManagement(currentUser?.role ?? '') && (
-                <button
-                  onClick={() => setDeleteAreaId(area.id)}
-                  className="w-6 h-6 mr-1 flex items-center justify-center rounded text-text-muted hover:text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-colors opacity-0 group-hover/area:opacity-100"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
+                <div className="flex items-center opacity-0 group-hover/area:opacity-100">
+                  <button
+                    onClick={() => setEditArea(area)}
+                    className="w-6 h-6 flex items-center justify-center rounded text-text-muted hover:text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
+                  >
+                    <Pencil className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => setDeleteAreaId(area.id)}
+                    className="w-6 h-6 mr-1 flex items-center justify-center rounded text-text-muted hover:text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-colors"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
               )}
             </div>
             {!collapsed[area.id] && area.projects.map((p) => (
@@ -182,11 +191,17 @@ function SidebarInner({ onLinkClick, currentUser }: SidebarInnerProps) {
         />
       )}
       <AreaFormular
-        open={areaFormOpen}
-        onClose={() => setAreaFormOpen(false)}
+        open={areaFormOpen || !!editArea}
+        onClose={() => { setAreaFormOpen(false); setEditArea(null) }}
+        editArea={editArea ?? undefined}
         onSuccess={(area) => {
-          setAreas((prev) => [...prev, { ...area, projects: [] }])
+          if (editArea) {
+            setAreas((prev) => prev.map((a) => a.id === area.id ? { ...a, ...area } : a))
+          } else {
+            setAreas((prev) => [...prev, { ...area, projects: [] }])
+          }
           setAreaFormOpen(false)
+          setEditArea(null)
         }}
       />
     </div>

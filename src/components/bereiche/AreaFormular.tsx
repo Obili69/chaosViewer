@@ -7,21 +7,34 @@ import { Button } from '@/components/ui/Button'
 import { ColorPicker } from '@/components/ui/ColorPicker'
 import { Sheet } from '@/components/ui/Sheet'
 
+interface AreaData {
+  id: string
+  name: string
+  color: string
+  description?: string | null
+}
+
 interface Props {
   open: boolean
   onClose: () => void
   onSuccess: (area: { id: string; name: string; color: string }) => void
+  editArea?: AreaData
 }
 
-export function AreaFormular({ open, onClose, onSuccess }: Props) {
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [color, setColor] = useState('#06b6d4')
+export function AreaFormular({ open, onClose, onSuccess, editArea }: Props) {
+  const [name, setName] = useState(editArea?.name ?? '')
+  const [description, setDescription] = useState(editArea?.description ?? '')
+  const [color, setColor] = useState(editArea?.color ?? '#06b6d4')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const isEdit = !!editArea
+
   function reset() {
-    setName(''); setDescription(''); setColor('#06b6d4'); setError('')
+    setName(editArea?.name ?? '')
+    setDescription(editArea?.description ?? '')
+    setColor(editArea?.color ?? '#06b6d4')
+    setError('')
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -29,8 +42,11 @@ export function AreaFormular({ open, onClose, onSuccess }: Props) {
     if (!name.trim()) { setError('Name erforderlich'); return }
     setLoading(true); setError('')
 
-    const res = await fetch('/api/areas', {
-      method: 'POST',
+    const url = isEdit ? `/api/areas/${editArea.id}` : '/api/areas'
+    const method = isEdit ? 'PATCH' : 'POST'
+
+    const res = await fetch(url, {
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: name.trim(), description, color }),
     })
@@ -38,7 +54,7 @@ export function AreaFormular({ open, onClose, onSuccess }: Props) {
     if (res.ok) {
       const { area } = await res.json()
       onSuccess(area)
-      reset()
+      if (!isEdit) reset()
       onClose()
     } else {
       const d = await res.json()
@@ -48,7 +64,7 @@ export function AreaFormular({ open, onClose, onSuccess }: Props) {
   }
 
   return (
-    <Sheet open={open} onClose={() => { reset(); onClose() }} title="Neuer Bereich">
+    <Sheet open={open} onClose={() => { reset(); onClose() }} title={isEdit ? 'Bereich bearbeiten' : 'Neuer Bereich'}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           label="Name *"
@@ -71,7 +87,7 @@ export function AreaFormular({ open, onClose, onSuccess }: Props) {
             Abbrechen
           </Button>
           <Button type="submit" disabled={loading} className="flex-1">
-            {loading ? 'Erstellen...' : 'Bereich erstellen'}
+            {loading ? (isEdit ? 'Speichern...' : 'Erstellen...') : (isEdit ? 'Speichern' : 'Bereich erstellen')}
           </Button>
         </div>
       </form>
