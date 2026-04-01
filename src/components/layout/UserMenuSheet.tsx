@@ -37,7 +37,7 @@ export function UserMenuSheet({ open, onClose, currentUser }: Props) {
   async function fetchVersion() {
     setChecking(true)
     try {
-      const r = await fetch('/api/admin/version')
+      const r = await fetch('/api/admin/version', { method: 'POST' })
       setVersionInfo(await r.json())
     } catch { /* ignore */ } finally {
       setChecking(false)

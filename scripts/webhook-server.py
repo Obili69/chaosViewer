@@ -28,6 +28,7 @@ log = logging.getLogger(__name__)
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent
 UPDATE_SCRIPT = PROJECT_DIR / "update.sh"
+CHECK_SCRIPT = SCRIPT_DIR / "check-update.sh"
 ENV_FILE = PROJECT_DIR / ".env"
 PORT = 3040
 
@@ -75,35 +76,55 @@ class UpdateHandler(http.server.BaseHTTPRequestHandler):
         else:
             self.send_json(404, {"error": "Not found"})
 
-    def do_POST(self):
-        if self.path != "/update":
-            self.send_json(404, {"error": "Not found"})
-            return
-
+    def check_secret(self) -> bool:
         provided = self.headers.get("X-Webhook-Secret", "")
         if not hmac.compare_digest(provided, self.secret):
             log.warning("Rejected request: invalid secret from %s", self.client_address[0])
             self.send_json(403, {"error": "Forbidden"})
+            return False
+        return True
+
+    def do_POST(self):
+        if not self.check_secret():
             return
 
-        if not UPDATE_SCRIPT.exists():
-            log.error("update.sh not found at %s", UPDATE_SCRIPT)
-            self.send_json(500, {"error": "update.sh not found"})
-            return
+        if self.path == "/check":
+            if not CHECK_SCRIPT.exists():
+                self.send_json(500, {"error": "check-update.sh not found"})
+                return
+            log.info("Running check-update.sh...")
+            result = subprocess.run(
+                ["/usr/bin/env", "bash", str(CHECK_SCRIPT)],
+                cwd=str(PROJECT_DIR),
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            # Read flag file after check
+            flag = PROJECT_DIR / "data" / ".update-available"
+            count = int(flag.read_text().strip()) if flag.exists() and flag.is_file() else 0
+            self.send_json(200, {"updateAvailable": count > 0, "updateCount": count})
 
-        log.info("Launching update.sh asynchronously...")
-        env = os.environ.copy()
-        env["NONINTERACTIVE"] = "1"
-        subprocess.Popen(
-            ["/usr/bin/env", "bash", str(UPDATE_SCRIPT)],
-            cwd=str(PROJECT_DIR),
-            env=env,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
-        )
-        self.send_json(202, {"status": "update started"})
+        elif self.path == "/update":
+            if not UPDATE_SCRIPT.exists():
+                self.send_json(500, {"error": "update.sh not found"})
+                return
+            log.info("Launching update.sh asynchronously...")
+            env = os.environ.copy()
+            env["NONINTERACTIVE"] = "1"
+            subprocess.Popen(
+                ["/usr/bin/env", "bash", str(UPDATE_SCRIPT)],
+                cwd=str(PROJECT_DIR),
+                env=env,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            self.send_json(202, {"status": "update started"})
+
+        else:
+            self.send_json(404, {"error": "Not found"})
 
 
 def main():
