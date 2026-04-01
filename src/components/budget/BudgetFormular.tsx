@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, type FormEvent, type ChangeEvent } from 'react'
-import { CURRENCY_LABEL } from '@/lib/utils'
+import { useState } from 'react'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
@@ -67,7 +66,7 @@ export function BudgetFormular({ projectId, item, restrictToAusgabe = false, onS
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input label="Bezeichnung *" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="z. B. Bauteile, Platine, Gehäuse..." autoFocus />
       <div className="grid grid-cols-2 gap-3">
-        <Input label={`Betrag (${CURRENCY_LABEL}) *`} type="number" step="0.01" min="0" value={amount} onChange={(e) => setAmount((e.target as HTMLInputElement).value)} placeholder="0.00" />
+        <Input label="Betrag (CHF) *" type="number" step="0.01" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
         {restrictToAusgabe ? (
           <div>
             <label className="text-xs text-text-muted block mb-1">Typ</label>
