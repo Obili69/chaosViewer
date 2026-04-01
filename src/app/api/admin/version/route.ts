@@ -21,23 +21,26 @@ export async function GET() {
   return NextResponse.json(readVersionFiles())
 }
 
-// POST — triggers a real git fetch check via webhook, then returns result
+// POST — triggers real git fetch via webhook, returns result directly from webhook response
 export async function POST() {
   const session = await getSession()
   if (!session) return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
 
   const secret = process.env.WEBHOOK_SECRET
-  if (!secret) {
-    // Webhook not configured — just return cached file state
-    return NextResponse.json(readVersionFiles())
-  }
+  if (!secret) return NextResponse.json(readVersionFiles())
+
+  const { version } = readVersionFiles()
 
   try {
-    await fetch(`${WEBHOOK_URL}/check`, {
+    const res = await fetch(`${WEBHOOK_URL}/check`, {
       method: 'POST',
       headers: { 'X-Webhook-Secret': secret },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(20000),
     })
+    if (res.ok) {
+      const data = await res.json()
+      return NextResponse.json({ version, ...data })
+    }
   } catch {
     // Webhook unreachable — fall back to cached files
   }

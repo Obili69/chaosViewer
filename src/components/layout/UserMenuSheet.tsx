@@ -31,7 +31,9 @@ export function UserMenuSheet({ open, onClose, currentUser }: Props) {
   const [updateState, setUpdateState] = useState<UpdateState>('idle')
   const [updateError, setUpdateError] = useState<string | null>(null)
 
-  useEffect(() => { if (open) fetchVersion() }, [open])
+  useEffect(() => {
+    if (open) fetch('/api/admin/version').then(r => r.json()).then(setVersionInfo).catch(() => {})
+  }, [open])
   useEffect(() => { if (!open) { setUpdateState('idle'); setUpdateError(null) } }, [open])
 
   async function fetchVersion() {
